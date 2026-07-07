@@ -130,20 +130,21 @@
 > ton modèle retenu parmi les `exp_NNN` ci-dessus. Le holdout n'est consulté
 > qu'ici.
 
-- **Date** : YYYY-MM-DD HH:MM
-- **Expérience retenue** : exp_NNN
+- **Date** : 2026-07-07 14:00
+- **Expérience retenue** : exp_005 (RF balanced court)
 - **Modèle persisté** : `models/pyrenex_risk_v2.joblib`
-- **Données holdout** : `data/lending_club_holdout.csv` (sha256 …, n=…)
+- **Données holdout** : `data/lending_club_holdout.csv` (sha256 b5ca9339a6ddc4303b73e7b7529329de44e1bcfe72371639eb3d4a8a6209fc77, n=6000)
 - **Métriques** :
-  - F1 macro : …
-  - F1 défaut : …
-  - ROC-AUC : …
-  - Recall défaut : …
+  - F1 macro : 0.5994
+  - F1 défaut : 0.4299
+  - ROC-AUC : 0.7307
+  - Recall défaut : 0.6745
+  - Precision défaut : 0.3155
 - **Matrice de confusion** :
 
 |  | Pred Fully Paid | Pred Charged Off |
 |---|---|---|
-| **Vrai Fully Paid** | … | … |
-| **Vrai Charged Off** | … | … |
+| **Vrai Fully Paid** | 3283 | 1614 |
+| **Vrai Charged Off** | 359 | 744 |
 
 - **Comparaison baseline 2017** : (cf. `verdict.md`)

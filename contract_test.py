@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # ⚠️ Le `.drop(columns=["loan_status"])` est essentiel : le pipeline
     #    attend les features uniquement, pas la cible.
 
-    expected_first_proba: list[float] | None = None  # TODO — colle ici les 2 floats du print
+    expected_first_proba: list[float] | None = [0.7037574038131758, 0.29624259618682736]
 
     if expected_first_proba is None:
         raise NotImplementedError(
