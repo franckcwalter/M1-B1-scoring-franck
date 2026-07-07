@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import time
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
@@ -28,7 +29,13 @@ from pathlib import Path
 import joblib
 import sklearn
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score, roc_auc_score
+from sklearn.metrics import (
+    classification_report,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
@@ -55,7 +62,55 @@ CONFIGS: dict[str, dict] = {
         "random_state": 42,
         "n_jobs": -1,
     },
-    # TODO — ajoute ton propre jeu d'hyperparamètres ici
+    "weighted_8": {
+        "n_estimators": 200,
+        "max_depth": 10,
+        "min_samples_leaf": 10,
+        "class_weight": {0: 1, 1: 8},
+        "random_state": 42,
+        "n_jobs": -1,
+    },
+    "balanced_deep": {
+        "n_estimators": 400,
+        "max_depth": 20,
+        "min_samples_leaf": 10,
+        "class_weight": "balanced",
+        "random_state": 42,
+        "n_jobs": -1,
+    },
+    "balanced_shallow": {
+        "n_estimators": 100,
+        "max_depth": 6,
+        "min_samples_leaf": 10,
+        "class_weight": "balanced",
+        "random_state": 42,
+        "n_jobs": -1,
+    },
+    "shallow_split50": {
+        "n_estimators": 100,
+        "max_depth": 6,
+        "min_samples_leaf": 10,
+        "min_samples_split": 50,
+        "class_weight": "balanced",
+        "random_state": 42,
+        "n_jobs": -1,
+    },
+    "shallow_leaf20": {
+        "n_estimators": 100,
+        "max_depth": 6,
+        "min_samples_leaf": 20,
+        "class_weight": "balanced",
+        "random_state": 42,
+        "n_jobs": -1,
+    },
+    "deep_leaf50": {
+        "n_estimators": 400,
+        "max_depth": 20,
+        "min_samples_leaf": 50,
+        "class_weight": "balanced",
+        "random_state": 42,
+        "n_jobs": -1,
+    },
 }
 
 
@@ -75,13 +130,21 @@ def train(config_name: str, data_path: Path, output_dir: Path) -> dict:
             ("classifier", RandomForestClassifier(**params)),
         ]
     )
+    t0 = time.time()
     pipeline.fit(X_train, y_train)
+    fit_time = time.time() - t0
 
+    y_pred = pipeline.predict(X_test)
     y_proba = pipeline.predict_proba(X_test)[:, 1]
     metrics = {
-        "f1_macro": f1_score(y_test, pipeline.predict(X_test), average="macro"),
+        "f1_macro": f1_score(y_test, y_pred, average="macro"),
+        "f1_default": f1_score(y_test, y_pred, pos_label=1),
         "roc_auc": roc_auc_score(y_test, y_proba),
+        "recall_default": recall_score(y_test, y_pred, pos_label=1),
+        "precision_default": precision_score(y_test, y_pred, pos_label=1),
+        "fit_time_sec": round(fit_time, 2),
     }
+    report = classification_report(y_test, y_pred, target_names=["Remboursé", "Défaut"])
 
     output_dir.mkdir(parents=True, exist_ok=True)
     model_path = output_dir / f"pyrenex_risk_v2_{config_name}.joblib"
@@ -106,7 +169,12 @@ def train(config_name: str, data_path: Path, output_dir: Path) -> dict:
     meta_path = output_dir / f"pyrenex_risk_v2_{config_name}.json"
     meta_path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
-    return {"model_path": model_path, "meta_path": meta_path, "metrics": metrics}
+    return {
+        "model_path": model_path,
+        "meta_path": meta_path,
+        "metrics": metrics,
+        "report": report,
+    }
 
 
 def main() -> None:
@@ -120,6 +188,7 @@ def main() -> None:
     print(f"Model saved to {result['model_path']}")
     print(f"Metadata saved to {result['meta_path']}")
     print(f"Metrics (test internal): {result['metrics']}")
+    print(f"\nClassification report (test internal):\n{result['report']}")
     print(
         "\nNext step: once you have chosen your retained config, promote it:\n"
         f"  cp {result['model_path']} {args.output}/pyrenex_risk_v2.joblib\n"
