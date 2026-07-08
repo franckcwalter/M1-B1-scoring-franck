@@ -1,18 +1,16 @@
-# M1-B1 — Squelette repo (Pyrenex Crédit scoring)
+# M1-B1 — Réentraînement du modèle de scoring Pyrenex Crédit
 
-> **Repo template GitHub.** Clique sur **« Use this template »** en haut à
-> droite de cette page → **Create a new repository** → nomme-le
-> `M1-B1-scoring-<prénom>` sur **ton** compte GitHub personnel.
-> C'est ce nouveau repo que tu cloneras pour travailler.
+Réentraînement et challenge du modèle de scoring crédit `pyrenex-risk-v1` (baseline 2017)
+sur un nouveau dataset Lending Club, aboutissant à `pyrenex_risk_v2`.
 
 ---
 
 ## 🚀 Démarrage (4 commandes)
 
 ```bash
-# 0. Clone ton repo perso fraîchement créé
-git clone git@github.com:<ton-user>/M1-B1-scoring-<prenom>.git
-cd M1-B1-scoring-<prenom>
+# 0. Clone le repo
+git clone git@github.com:franckcwalter/M1-B1-scoring-franck.git
+cd M1-B1-scoring-franck
 
 # 1. Environnement virtuel
 python -m venv .venv && source .venv/bin/activate     # Linux/macOS
@@ -20,121 +18,62 @@ python -m venv .venv && source .venv/bin/activate     # Linux/macOS
 
 # 2. Dépendances
 pip install -r requirements.txt
-#    ▸ Option uv (si tu as suivi le setup avec uv) — un `uv venv` n'embarque
-#      PAS pip, il faut donc `uv pip` :
-# uv venv --python 3.11 && source .venv/bin/activate
-# uv pip install -r requirements.txt
 
 # 3. Vérification
 python src/train.py --help     # → doit afficher l'usage du script
 ```
-
-Si ces 4 commandes marchent, ton poste est prêt.
 
 ---
 
 ## 📁 Structure du repo
 
 ```
-M1-B1-scoring-<prenom>/
+M1-B1-scoring-franck/
 ├── data/
-│   ├── lending_club_train.csv           # à télécharger (cf. ci-dessous)
-│   └── lending_club_holdout.csv         # à télécharger
+│   ├── lending_club_train.csv           # 24 000 lignes (train + test interne)
+│   └── lending_club_holdout.csv         # 6 000 lignes (évaluation finale)
 ├── notebooks/
-│   └── M1-B1_template.ipynb             # à dupliquer en M1-B1_<prenom>_scoring.ipynb
+│   └── M1-B1_franck.ipynb               # démarche complète (EDA → verdict)
 ├── src/
-│   ├── preprocess.py                    # transformations reproductibles
-│   ├── train.py                         # script d'entraînement
+│   ├── preprocess.py                    # transformations reproductibles (Pipeline)
+│   ├── train.py                         # entraînement + benchmark des configs
 │   └── evaluate.py                      # métriques sur holdout
-├── models/                              # .joblib + .json produits ici
-│   └── .gitkeep
-├── ressources/                          # 📚 mini-cours d'appui (lecture juste-à-temps)
-│   ├── 01_Pandas_Sklearn_split_essentiel.md
-│   ├── 02_Metrics_classif_desequilibree_essentiel.md
-│   ├── 03_RandomForest_hyperparams_essentiel.md
-│   ├── 04_Tracage_experiments_md_essentiel.md
-│   ├── 05_Persistance_modele_joblib_essentiel.md
-│   ├── liens_officiels.md
-│   └── README.md                        # ordre de mobilisation + objectifs
-├── contract_test.py                     # à compléter — valide shapes/classes/probas du .joblib
-├── experiments.md                       # à compléter run par run
-├── verdict.md                           # à rédiger en fin de journée
+├── models/
+│   ├── pyrenex_risk_v2.joblib           # 🎯 modèle retenu (Pipeline complet)
+│   └── pyrenex_risk_v2.json             # métadonnées + metrics_holdout
+├── ressources/                          # mini-cours d'appui
+├── contract_test.py                     # valide shapes/classes/probas du .joblib
+├── experiments.md                       # trace des runs (test interne)
+├── verdict.md                           # note de synthèse pour le métier
 ├── requirements.txt
-├── .gitignore
-└── README.md (ce fichier — à compléter)
+└── README.md
 ```
 
 ---
 
-## 📚 Mini-cours d'appui
+## 📓 Notebook (`notebooks/M1-B1_franck.ipynb`)
 
-Les **5 mini-cours pédagogiques** du brief sont fournis dans
-[`./ressources/`](./ressources/). Chacun se lit en ~15-20 min, **au moment où
-tu en as besoin** pendant la journée :
+Déroulé de la démarche, une section par tâche :
 
-| Tâche | Mini-cours |
-|---|---|
-| EDA + split stratifié | [`01_Pandas_Sklearn_split_essentiel.md`](./ressources/01_Pandas_Sklearn_split_essentiel.md) |
-| Métriques pour classification déséquilibrée | [`02_Metrics_classif_desequilibree_essentiel.md`](./ressources/02_Metrics_classif_desequilibree_essentiel.md) |
-| Hyperparamètres RandomForest | [`03_RandomForest_hyperparams_essentiel.md`](./ressources/03_RandomForest_hyperparams_essentiel.md) |
-| Traçage des runs (`experiments.md`) | [`04_Tracage_experiments_md_essentiel.md`](./ressources/04_Tracage_experiments_md_essentiel.md) |
-| Persistance modèle (joblib + JSON) | [`05_Persistance_modele_joblib_essentiel.md`](./ressources/05_Persistance_modele_joblib_essentiel.md) |
+- **0. Setup** — imports et chargement de l'environnement.
+- **1. Comprendre la baseline** — rappel des métriques de `pyrenex-risk-v1` (2017) à battre.
+- **2. EDA** — exploration du nouveau dataset et de ce qui a changé depuis 2017.
+- **3. Préparation et split** — split stratifié `random_state=42`, holdout mis de côté.
+- **4. Entraînement + benchmark** — comparaison des configs d'hyperparamètres et récap des runs.
+- **4bis. Stabilité du score** — vérification du plancher de bruit en faisant varier le `random_state`.
+- **5. Évaluation sur holdout** — mesure finale du modèle retenu (exp_005), consultée une seule fois.
+- **6. Verdict** — synthèse et recommandation.
 
-Cf. [`./ressources/README.md`](./ressources/README.md) pour l'ordre de mobilisation détaillé.
-
----
-
-## 📥 Données
-
-Le dataset Lending Club sous-échantillonné (~30 k lignes) t'est fourni par
-la formatrice lundi 9h. Place les 2 fichiers dans `data/` :
-
-- `data/lending_club_train.csv` (~24 k lignes)
-- `data/lending_club_holdout.csv` (~6 k lignes — **à ne PAS toucher** pendant l'entraînement)
+Chaque run est tracé dans [`experiments.md`](./experiments.md) (métriques **test interne** ;
+le holdout n'y apparaît qu'une fois, en bas de fichier, pour le modèle retenu).
 
 ---
 
-## 🧭 Démarche attendue
+## 📦 Rendu
 
-1. **Comprends la baseline** : clone le repo public
-   [`Formation-SIMPLON-IA/pyrenex-risk-v1`](https://github.com/Formation-SIMPLON-IA/pyrenex-risk-v1),
-   lis le code et les métriques rapportées.
-2. **EDA** dans le notebook (cellules markdown structurées).
-3. **Split stratifié** avec `random_state=42`. Le `holdout` reste intact
-   jusqu'à l'étape 6 (cf. règle d'or *comparabilité*).
-4. **Entraînement** d'au moins 2 jeux d'hyperparamètres dans `src/train.py`.
-   Trace chaque run dans `experiments.md` avec score `test` interne (pas
-   le holdout).
-5. **Évaluation finale sur le holdout** avec `src/evaluate.py` —
-   **une seule fois**.
-6. **Persistance** du Pipeline complet : `models/pyrenex_risk_v2.joblib`
-   + `pyrenex_risk_v2.json` avec les **5 clés obligatoires**
-   (`model_version`, `created_at`, `sklearn_version`, `dataset_sha256`,
-   `metrics_holdout`).
-7. **Contract test** : complète `contract_test.py` et lance-le dans un
-   script séparé — tous les `assert` doivent passer.
-8. **Verdict** dans `verdict.md` (1 page max) + tag git `v2.0.0`.
-
-Mini-cours d'appui : voir [`./ressources/`](./ressources/).
-
----
-
-## ✅ Conventions de code
-
-- Python 3.11+
-- Type hints sur toutes les signatures publiques
-- Pas de `print` — utiliser **Loguru**
-- `random_state=42` partout où il y a de l'aléa
-- `pathlib.Path` pour les chemins (pas de `os.path`)
-
----
-
-## 🆘 Bloqué·e ?
-
-1. Relis le mini-cours correspondant à ta tâche actuelle (cf.
-   [`./ressources/README.md`](./ressources/README.md)).
-2. Vérifie ton split avec **2 runs successifs** : mêmes shapes, mêmes
-   contenus → reproductibilité OK.
-3. Compare tes métriques à celles de la baseline `pyrenex-risk-v1` —
-   un écart > 50% absolu = relire ton preprocessing.
-4. Demande en direct lundi.
+- **Modèle livré** : [`models/pyrenex_risk_v2.joblib`](./models/) — Pipeline scikit-learn complet
+  (preprocessing + RandomForest), accompagné de [`pyrenex_risk_v2.json`](./models/) qui porte
+  les métadonnées et les `metrics_holdout`. Configuration retenue : `exp_005`
+  (RandomForest `class_weight='balanced'`, `max_depth=6`).
+- **Verdict** : [`verdict.md`](./verdict.md) — comparaison chiffrée à la baseline 2017, trade-off
+  expliqué au métier et recommandation.
